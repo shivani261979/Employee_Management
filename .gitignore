@@ -1,2 +1,2 @@
-Employee_Mgmt/node_modules
-DS_Store
+./Employee_Mgmt/node_modules
+.DS_Store
