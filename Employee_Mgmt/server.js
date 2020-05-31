@@ -24,33 +24,55 @@ function start() {
             type: "list",
             message: "Would you like to do?",
             choices: [
-                "list all Employees",
-                "list all Employees by Department",
-                "list all Employees by Manager",
+                "View all Employees",
+                "View all Departments",
+                "View all Roles",
                 "Add an Employee",
-                "Remove an Employee",
+                "Add a Department",
+                "Add a Role",
                 "Update Employee Info",
-                "list All Roles",
+                // "List all Employees by Department",
+                "View Employees by Manager",
+                // "list All Roles",
+                "Remove an Employee",
+                "Remove a Department",
+                "Remove a Role",
                 "Department's budget",
                 "Exit"
             ]
         })
         .then(function (answer) {
             switch (answer.action) {
-                case "list all Employees":
-                    view("employees");
+                case "View all Employees":
+                    view("employee");
                     break;
 
-                case "list all Employees by Department":
-                    list("department");
+                case "View all Departments":
+                    view("department");
                     break;
 
-                case "list all Employees by Manager":
+                case "View all Roles":
+                    view("roles");
+                    break;
+
+                // case "list all Employees by Department":
+                //     list("department");
+                //     break;
+
+                case "View Employees by Manager":
                     list("manager");
                     break;
 
                 case "Add an Employee":
-                    add("employees");
+                    add("employee");
+                    break;
+
+                case "Add a Department":
+                    add("department");
+                    break;
+
+                case "Add a Role":
+                    add("role");
                     break;
 
                 case "Remove an Employee":
@@ -61,9 +83,9 @@ function start() {
                     update("employee");
                     break;
 
-                case "list All Roles":
-                    list("roles");
-                    break;
+                // case "list All Roles":
+                //     list("roles");
+                //     break;
 
                 case "Department's budget":
                     total();
@@ -79,8 +101,8 @@ function start() {
         });
 }
 
-function view(){
-    sqlQuery = "SELECT * FROM employee";
+function view(tableName){
+    sqlQuery = "SELECT * FROM " + tableName;
     connection.query(sqlQuery, function (err, res) {
         if (err) throw err;
         console.table(res);
@@ -90,21 +112,21 @@ function view(){
 
 function list(choice) {
     switch (choice) {
-        case "employees":
-            sqlQuery = "SELECT e.id, CONCAT(e.first_name, ' ' ,e.last_name) AS Name, r.title As Title, d.name As Department FROM employee e INNER JOIN roles r ON e.role_id = r.id INNER JOIN department d ON r.department_id = d.id ORDER BY e.first_name";
-            break;
-
-        case "department":
-            sqlQuery = "SELECT e.id, CONCAT(e.first_name, ' ' ,e.last_name) AS Name, r.title As Title, d.name As Department FROM employee e INNER JOIN roles r ON e.role_id = r.id INNER JOIN department d ON r.department_id = d.id ORDER BY d.name";
-            break;
-
         case "manager":
             sqlQuery = "SELECT e.id, CONCAT(e.first_name, ' ' ,e.last_name) AS Name, CONCAT(m.first_name, ' ' ,m.last_name) AS Manager_Name FROM employee e LEFT OUTER JOIN employee m ON e.manager_id = m.id ORDER BY m.first_name";
             break;
 
-        case "roles":
-            sqlQuery = "SELECT r.id, r.title, r.salary, d.name FROM roles r INNER JOIN department d ON r.department_id = d.id";
-            break;
+        // case "employees":
+        //     sqlQuery = "SELECT e.id, CONCAT(e.first_name, ' ' ,e.last_name) AS Name, r.title As Title, d.name As Department FROM employee e INNER JOIN roles r ON e.role_id = r.id INNER JOIN department d ON r.department_id = d.id ORDER BY e.first_name";
+        //     break;
+
+        // case "department":
+        //     sqlQuery = "SELECT e.id, CONCAT(e.first_name, ' ' ,e.last_name) AS Name, r.title As Title, d.name As Department FROM employee e INNER JOIN roles r ON e.role_id = r.id INNER JOIN department d ON r.department_id = d.id ORDER BY d.name";
+        //     break;
+
+        // case "roles":
+        //     sqlQuery = "SELECT r.id, r.title, r.salary, d.name FROM roles r INNER JOIN department d ON r.department_id = d.id";
+        //     break;
     }
     connection.query(sqlQuery, function (err, res) {
         if (err) throw err;
@@ -115,40 +137,127 @@ function list(choice) {
 
 function add(choice) {
     switch (choice) {
-        case "employees":
+        case "employee":
+
+            connection.query("SELECT * FROM employee", function (err, res) {
+                if (err) throw err;
+                console.log("----------    Existing records in employee table     ----------- ")
+                console.table(res);
+                console.log("\n");
+
+                connection.query("SELECT * FROM roles", function (err, res) {
+                    if (err) throw err;
+                    console.log("----------    Existing records in roles table     ----------- ")
+                    console.table(res);
+                    console.log("\n");
+
+                    inquirer
+                        .prompt([
+                            {
+                                name: "first",
+                                type: "input",
+                                message: "Enter employee's first name to be added: "
+                            },
+                            {
+                                name: "last",
+                                type: "input",
+                                message: "Enter employee's last name to be added: "
+                            },
+                            {
+                                name: "role",
+                                type: "input",
+                                message: "Enter employee's role id (from 'roles' table above): "
+                            },
+                            {
+                                name: "manager",
+                                type: "input",
+                                message: "Enter employee's manager id (from 'employee' table above): "
+                            },
+                        ]).then(function (answer) {
+                            var query = `INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES ("${answer.first}", "${answer.last}", ${answer.role}, ${answer.manager})`;
+                            connection.query(query, function (err, res) {
+                                if (err) throw err;
+                                console.log("The employee with name " + answer.first + " has been added to the system.");
+                                console.log(" ");
+                                console.log(" ");
+                                end();
+                            })
+                        });
+                    });
+                });
+            break;
+
+        case "department":
+
+            connection.query("SELECT * FROM department", function (err, res) {
+                if (err) throw err;
+                console.log("----------    Existing records in department table     ----------- ");
+                console.table(res);
             inquirer
                 .prompt([
                     {
-                        name: "first",
+                        name: "dept_name",
                         type: "input",
-                        message: "Enter employee's first name to be added: "
-                    },
-                    {
-                        name: "last",
-                        type: "input",
-                        message: "Enter employee's last name to be added: "
-                    },
-                    {
-                        name: "role",
-                        type: "input",
-                        message: "Enter employee's role id to be added: "
-                    },
-                    {
-                        name: "manager",
-                        type: "input",
-                        message: "Enter employee's manager id to be added: "
-                    },
+                        message: "Enter department name to be added: "
+                    }
                 ]).then(function (answer) {
-                    var query = `INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES ("${answer.first}", "${answer.last}", ${answer.role}, ${answer.manager})`;
+                    var query = `INSERT INTO department(name) VALUES ("${answer.dept_name}")`;
                     connection.query(query, function (err, res) {
                         if (err) throw err;
-                        console.log("The employee with name " + answer.first + " has been added to the system.");
+                        console.log("A new department with name '" + answer.dept_name + "' has been added to the DB.");
                         console.log(" ");
                         console.log(" ");
                         end();
                     })
                 })
+            });
             break;
+
+            case "role":
+
+                connection.query("SELECT * FROM roles", function (err, res) {
+                    if (err) throw err;
+                    console.log("----------    Existing records in roles table     ----------- ")
+                    console.table(res);
+                    console.log("\n");
+
+                    connection.query("SELECT * FROM department", function (err, res) {
+                        if (err) throw err;
+                        console.log("----------    Existing records in department table     ----------- ")
+                        console.table(res);
+
+                        inquirer
+                            .prompt([
+                                {
+                                    name: "title",
+                                    type: "input",
+                                    message: "Enter new role/title to add: "
+                                },
+                                {
+                                    name: "salary",
+                                    type: "input",
+                                    message: "Enter salary for this title: "
+                                },
+                                {
+                                    name: "dept_id",
+                                    type: "input",
+                                    message: "Enter department id for this title (see department table displayed above): "
+                                },
+                            ]).then(function (answer) {
+                                var query = `INSERT INTO roles(title, salary, department_id) VALUES ("${answer.title}", ${answer.salary}, ${answer.dept_id})`;
+                                connection.query(query, function (err, res) {
+                                    if (err) throw err;
+                                    console.log("a new role with title " + answer.title + " has been added to the DB.");
+                                    console.log(" ");
+                                    console.log(" ");
+                                    end();
+                                })
+                            })
+                        });
+                    });
+
+                break;
+    
     }
 }
 
@@ -180,31 +289,39 @@ function remove(choice) {
     });
 }
 
-
 function update(choice) {
-    connection.query("SELECT * FROM " + choice, function (err, res) {
+
+    connection.query("SELECT * FROM employee", function (err, res) {
         if (err) throw err;
-        inquirer
-            .prompt([{
-                name: "choice",
-                type: "rawlist",
-                choices: function () {
-                    var choiceArray = [];
-                    for (var i = 0; i < res.length; i++) {
-                        choiceArray.push(res[i].first_name);
-                    }
-                    return choiceArray;
-                },
-                message: "Update employee"
-            }]).then(function (answer1) {
-                inquirer
-                    .prompt([{
+        console.log("----------    Existing records in employee table     ----------- ")
+        console.table(res);
+        console.log("\n");
+
+        connection.query("SELECT * FROM roles", function (err, res) {
+            if (err) throw err;
+            console.log("----------    Existing records in role table     ----------- ")
+            console.table(res);
+            console.log("\n");
+    
+            connection.query("SELECT * FROM " + choice, function (err, res) {
+                if (err) throw err;
+                inquirer.prompt([{
+                    name: "choice",
+                    type: "rawlist",
+                    choices: function () {
+                        var choiceArray = [];
+                        for (var i = 0; i < res.length; i++) {
+                            choiceArray.push(res[i].first_name);
+                        }
+                        return choiceArray;
+                    },
+                    message: "Update employee"
+                }]).then(function (answer1) {
+                    inquirer.prompt([{
                         name: "column_name",
                         type: "list",
                         message: "Which column would you like to update? ",
                         choices: [
-                            "first_name",
-                            "last_name",
                             "role_id",
                             "manager_id"],
                     },
@@ -221,9 +338,11 @@ function update(choice) {
                             console.log(" ");
                             end();
                         })
-                    })
-            })
-    })
+                    });
+                });
+            });
+        });
+    });
 }
 
 function end() {
